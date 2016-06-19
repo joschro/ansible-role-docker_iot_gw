@@ -1,7 +1,27 @@
 ---
 # tasks file for docker_iot_gw
-- name: Upgrade all packages
-  yum: name=* state=latest
+- name: Install helper packages
+  yum: name=unzip,java-1.8.0-openjdk-devel state=present
   tags: packages
 
+- name: Download maven
+  get_url: url=http://mirror.olnevhost.net/pub/apache/maven/maven-3/3.3.9/binaries/apache-maven-3.3.9-bin.zip dest=/root/apache-maven-3.3.9-bin.zip mode=644
+  tags: packages
 
+- name: Unpack maven
+  shell: test -d /opt/apache-maven-3.3.9 || /usr/bin/unzip /root/apache-maven-3.3.9-bin.zip -d /opt/
+  tags: packages
+
+- name: Link maven binary
+  file: path=/usr/bin/mvn
+        src=/opt/apache-maven-3.3.9/bin/mvn
+        state=link 
+  tags: packages
+
+- name: Create maven environment
+  template: src=maven_jdk.j2 dest=/etc/profile.d/maven_jdk.sh
+  tags: packages
+
+- name: Make /etc/profile.d/maven_jdk.sh executable
+  file: path=/etc/profile.d/maven_jdk.sh mode="u+x"
+  tags: packages
